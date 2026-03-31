@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-微信公众号排版转换脚本
+微信公众号排版转换脚本（带图版）
 将 Markdown 或纯文本转换为可直接粘贴到微信公众号编辑器的 HTML
+支持自动在合适位置插入配图占位符或实际图片
 
 用法：
     python format.py --input article.md --output output.html
+    python format.py --input article.md --output output.html --with-images
     python format.py --input article.txt --title "我的文章" --theme "#07c160"
+    python format.py --input article.md --output output.html --image-style "flat illustration"
 """
 
 import re
@@ -20,6 +23,12 @@ DEFAULT_THEME = "#07c160"
 DEFAULT_THEME_LIGHT = "#e8f5ef"
 DEFAULT_THEME_BORDER = "#b7dfc8"
 
+# ─── 图片配置 ──────────────────────────────────────────────────────────────────
+DEFAULT_IMAGE_STYLE = "minimalist flat illustration, soft colors, modern tech style, no text, no watermark, no logo"
+DEFAULT_IMAGE_PLACEHOLDER = "https://via.placeholder.com/677x340/e8f5ef/07c160?text=配图占位"
+
+# 图片插入策略：每隔多少个 H2 章节插一张图
+IMAGE_EVERY_N_SECTIONS = 1  # 每个章节都尝试插图
 
 # ─── 样式常量 ──────────────────────────────────────────────────────────────────
 FONT_FAMILY = "-apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', Arial, sans-serif"
@@ -28,7 +37,6 @@ MONO_FAMILY = "'Menlo', 'Monaco', 'Consolas', monospace"
 
 def build_styles(theme: str = DEFAULT_THEME) -> dict:
     """根据主题色构建样式字典"""
-    # 计算浅色版本（简化处理：固定用预设浅色）
     light = DEFAULT_THEME_LIGHT
     border = DEFAULT_THEME_BORDER
 
@@ -157,7 +165,82 @@ def build_styles(theme: str = DEFAULT_THEME) -> dict:
         "link": (
             f"color: #576b95; text-decoration: none;"
         ),
+        # ── 图片组件样式 ──────────────────────────────────────────────
+        "figure": (
+            f"margin: 28px 0; text-align: center;"
+        ),
+        "img_full": (
+            f"max-width: 100%; border-radius: 8px; display: block; margin: 0 auto; "
+            f"box-shadow: 0 4px 16px rgba(0,0,0,0.10);"
+        ),
+        "img_cover": (
+            f"max-width: 100%; border-radius: 12px; display: block; margin: 0 auto; "
+            f"box-shadow: 0 6px 24px rgba(0,0,0,0.14);"
+        ),
+        "img_inline": (
+            f"max-width: 80%; border-radius: 8px; display: block; margin: 0 auto;"
+        ),
+        "figcaption": (
+            f"font-size: 13px; color: #999; margin-top: 8px; line-height: 1.6; "
+            f"font-style: italic;"
+        ),
+        # 图片占位符注释样式（仅用于 --with-images 模式）
+        "img_placeholder_wrap": (
+            f"margin: 28px 0; padding: 20px; text-align: center; "
+            f"background: #f7faf8; border: 2px dashed #b7dfc8; border-radius: 10px;"
+        ),
+        "img_placeholder_text": (
+            f"font-size: 14px; color: #07c160; margin: 0;"
+        ),
     }
+
+
+# ─── 图片 HTML 生成器 ──────────────────────────────────────────────────────────
+
+def make_image_html(src: str, alt: str = "", caption: str = "",
+                    style_key: str = "img_full", s: dict = None,
+                    is_placeholder: bool = False) -> str:
+    """生成图片 HTML 组件"""
+    if s is None:
+        s = build_styles()
+
+    if is_placeholder:
+        # 占位符模式：输出带说明的占位区域
+        placeholder_src = DEFAULT_IMAGE_PLACEHOLDER
+        keyword_hint = f"关键词：{alt}" if alt else "请替换为实际图片"
+        return (
+            f'<figure style="{s["figure"]}">\n'
+            f'  <!-- AI配图占位符 | {keyword_hint} -->\n'
+            f'  <img src="{placeholder_src}" alt="{escape_html(alt)}"\n'
+            f'       style="{s[style_key]}" />\n'
+            f'  <figcaption style="{s["figcaption"]}">'
+            f'{escape_html(caption) if caption else escape_html(alt)}</figcaption>\n'
+            f'</figure>\n'
+        )
+    else:
+        cap_html = f'\n  <figcaption style="{s["figcaption"]}">{escape_html(caption)}</figcaption>' if caption else ""
+        return (
+            f'<figure style="{s["figure"]}">\n'
+            f'  <img src="{escape_html(src)}" alt="{escape_html(alt)}"\n'
+            f'       style="{s[style_key]}" />'
+            f'{cap_html}\n'
+            f'</figure>\n'
+        )
+
+
+def make_section_image_placeholder(section_title: str, s: dict,
+                                    image_style: str = DEFAULT_IMAGE_STYLE) -> str:
+    """为章节生成自动插图占位符（--with-images 模式下使用）"""
+    clean_title = re.sub(r'[^\w\s\u4e00-\u9fff]', '', section_title).strip()
+    hint = f"{clean_title}, {image_style}"
+    return (
+        f'<!-- [AUTO_IMAGE] prompt="{hint}" width=677 height=340 -->\n'
+        f'<figure style="{s["figure"]}">\n'
+        f'  <img src="{DEFAULT_IMAGE_PLACEHOLDER}" alt="{escape_html(clean_title)}"\n'
+        f'       style="{s["img_full"]}" />\n'
+        f'  <figcaption style="{s["figcaption"]}">▲ {escape_html(clean_title)}</figcaption>\n'
+        f'</figure>\n'
+    )
 
 
 # ─── 转换函数 ──────────────────────────────────────────────────────────────────
@@ -198,20 +281,73 @@ def process_inline(text: str, s: dict) -> str:
     return text
 
 
-def parse_markdown(md: str, theme: str = DEFAULT_THEME) -> str:
-    """将 Markdown 转换为微信公众号 HTML"""
+def process_image_line(line: str, s: dict) -> str:
+    """
+    处理 Markdown 图片语法：
+    - ![alt](url)          → 全宽图片组件
+    - ![alt](AUTO)         → AI 自动生成占位（实际生成需 AI 工具介入）
+    - ![alt|caption](url)  → 带说明文字的图片
+    """
+    img_match = re.match(r'^!\[([^\]]*)\]\(([^)]+)\)\s*$', line.strip())
+    if not img_match:
+        return None
+
+    raw_alt = img_match.group(1)
+    src = img_match.group(2).strip()
+
+    # 解析 alt|caption 格式
+    if "|" in raw_alt:
+        alt, caption = raw_alt.split("|", 1)
+        alt = alt.strip()
+        caption = caption.strip()
+    else:
+        alt = raw_alt.strip()
+        caption = alt  # 默认用 alt 作为说明文字
+
+    # AUTO 模式：生成占位符
+    if src.upper() == "AUTO":
+        return make_image_html(
+            src=DEFAULT_IMAGE_PLACEHOLDER,
+            alt=alt,
+            caption=caption,
+            style_key="img_full",
+            s=s,
+            is_placeholder=True
+        )
+
+    # 普通图片
+    return make_image_html(src=src, alt=alt, caption=caption, style_key="img_full", s=s)
+
+
+def parse_markdown(md: str, theme: str = DEFAULT_THEME,
+                   with_images: bool = False,
+                   image_style: str = DEFAULT_IMAGE_STYLE,
+                   no_cover: bool = False) -> str:
+    """
+    将 Markdown 转换为微信公众号 HTML
+
+    参数：
+        md: Markdown 文本
+        theme: 主题色
+        with_images: 是否在章节处自动插入图片占位符
+        image_style: AI 图片风格描述（用于生成提示词）
+        no_cover: 是否跳过封面图
+    """
     s = build_styles(theme)
     lines = md.split("\n")
     html_parts = []
-    
+
     i = 0
-    step_counter = 0  # 用于 Step N 自动编号
     in_code_block = False
     code_lang = ""
     code_lines = []
     is_copy_block = False
     in_ul = False
     ul_items = []
+    h1_seen = False        # 是否已处理第一个 H1（用于决定是否插封面图）
+    h2_count = 0           # H2 章节计数（用于控制图片插入频率）
+    section_char_count = 0  # 当前章节字符数（决定是否值得插图）
+    current_section_title = ""  # 当前章节标题
 
     def flush_ul():
         nonlocal in_ul, ul_items
@@ -229,13 +365,20 @@ def parse_markdown(md: str, theme: str = DEFAULT_THEME) -> str:
         ul_items = []
         return result
 
+    def maybe_insert_section_image(title: str) -> str:
+        """在章节前尝试插入配图（仅 with_images 模式）"""
+        if not with_images:
+            return ""
+        if section_char_count < 80:  # 内容太少则不插图
+            return ""
+        return make_section_image_placeholder(title, s, image_style)
+
     while i < len(lines):
         line = lines[i]
 
         # ── 代码块 ──────────────────────────────────────────────────
         if line.strip().startswith("```"):
             if not in_code_block:
-                # 检查前几行（最多3行）是否包含 📋 复制标记
                 is_copy_block = False
                 for k in range(1, 4):
                     prev = lines[i-k].strip() if i >= k else ""
@@ -248,7 +391,6 @@ def parse_markdown(md: str, theme: str = DEFAULT_THEME) -> str:
                 code_lang = line.strip()[3:].strip() or "bash"
                 code_lines = []
             else:
-                # 关闭代码块
                 code_content = escape_html("\n".join(code_lines))
                 if is_copy_block:
                     block = (
@@ -291,6 +433,14 @@ def parse_markdown(md: str, theme: str = DEFAULT_THEME) -> str:
             i += 1
             continue
 
+        # ── Markdown 图片语法 ─────────────────────────────────────
+        img_html = process_image_line(line, s)
+        if img_html is not None:
+            html_parts.append(flush_ul())
+            html_parts.append(img_html)
+            i += 1
+            continue
+
         # ── H1 ──────────────────────────────────────────────────
         if line.startswith("# "):
             html_parts.append(flush_ul())
@@ -299,14 +449,37 @@ def parse_markdown(md: str, theme: str = DEFAULT_THEME) -> str:
                 f'<h1 style="{s["h1"]}">{text}</h1>\n'
                 f'<div style="{s["h1_underline"]}"></div>\n'
             )
+            # 封面图：H1 之后插入（仅首次且未禁用）
+            if not h1_seen and not no_cover and with_images:
+                cover_title = line[2:].strip()
+                cover_prompt = f"{cover_title}, {image_style}"
+                html_parts.append(
+                    f'<!-- [AUTO_IMAGE:COVER] prompt="{cover_prompt}" width=677 height=340 -->\n'
+                    f'<figure style="{s["figure"]}">\n'
+                    f'  <img src="{DEFAULT_IMAGE_PLACEHOLDER}" alt="{escape_html(cover_title)}"\n'
+                    f'       style="{s["img_cover"]}" />\n'
+                    f'  <figcaption style="{s["figcaption"]}">▲ 封面图</figcaption>\n'
+                    f'</figure>\n'
+                )
+            h1_seen = True
+            section_char_count = 0
             i += 1
             continue
 
         # ── H2 ──────────────────────────────────────────────────
         if line.startswith("## "):
             html_parts.append(flush_ul())
-            text = process_inline(line[3:].strip(), s)
+            # 在新章节开始前，为上一章节插入配图（如内容足够多）
+            if with_images and h2_count > 0 and section_char_count >= 80:
+                html_parts.append(maybe_insert_section_image(current_section_title))
+
+            section_title_raw = line[3:].strip()
+            text = process_inline(section_title_raw, s)
             html_parts.append(f'<h2 style="{s["h2"]}">{text}</h2>\n')
+
+            h2_count += 1
+            current_section_title = section_title_raw
+            section_char_count = 0
             i += 1
             continue
 
@@ -325,10 +498,11 @@ def parse_markdown(md: str, theme: str = DEFAULT_THEME) -> str:
             html_parts.append(
                 f'<blockquote style="{s["blockquote"]}">{text}</blockquote>\n'
             )
+            section_char_count += len(line)
             i += 1
             continue
 
-        # ── 提示框：💡 开头为绿色提示，⚠️ 开头为黄色警告 ─────────────
+        # ── 提示框 ────────────────────────────────────────────────
         if line.startswith("💡") or line.lower().startswith("> 💡"):
             html_parts.append(flush_ul())
             clean = re.sub(r'^>?\s*', '', line).strip()
@@ -337,6 +511,7 @@ def parse_markdown(md: str, theme: str = DEFAULT_THEME) -> str:
                 f'<div style="{s["tip_green"]}">'
                 f'<p style="{s["tip_green_text"]}">{text}</p></div>\n'
             )
+            section_char_count += len(line)
             i += 1
             continue
 
@@ -348,6 +523,7 @@ def parse_markdown(md: str, theme: str = DEFAULT_THEME) -> str:
                 f'<div style="{s["tip_yellow"]}">'
                 f'<p style="{s["tip_yellow_text"]}">{text}</p></div>\n'
             )
+            section_char_count += len(line)
             i += 1
             continue
 
@@ -357,7 +533,6 @@ def parse_markdown(md: str, theme: str = DEFAULT_THEME) -> str:
             html_parts.append(flush_ul())
             num = step_match.group(1)
             title = process_inline(step_match.group(2).strip(), s)
-            # 收集后续缩进行作为步骤描述
             desc_lines = []
             j = i + 1
             while j < len(lines) and (lines[j].startswith("  ") or lines[j].startswith("\t")):
@@ -374,6 +549,7 @@ def parse_markdown(md: str, theme: str = DEFAULT_THEME) -> str:
                 f'  </div>\n'
                 f'</div>\n'
             )
+            section_char_count += len(line)
             i = j
             continue
 
@@ -381,6 +557,7 @@ def parse_markdown(md: str, theme: str = DEFAULT_THEME) -> str:
         if re.match(r'^[-*+]\s+', line):
             in_ul = True
             ul_items.append(re.sub(r'^[-*+]\s+', '', line).strip())
+            section_char_count += len(line)
             i += 1
             continue
 
@@ -396,6 +573,7 @@ def parse_markdown(md: str, theme: str = DEFAULT_THEME) -> str:
                 f'<span style="color: {theme}; font-weight: bold; margin-right: 6px;">{num}.</span>'
                 f'{text}</p>\n'
             )
+            section_char_count += len(line)
             i += 1
             continue
 
@@ -403,16 +581,21 @@ def parse_markdown(md: str, theme: str = DEFAULT_THEME) -> str:
         html_parts.append(flush_ul())
         text = process_inline(line.strip(), s)
         html_parts.append(f'<p style="{s["p"]}">{text}</p>\n')
+        section_char_count += len(line)
         i += 1
 
     # 处理末尾未关闭的列表
     html_parts.append(flush_ul())
 
+    # 文章末尾：为最后一个章节插图
+    if with_images and current_section_title and section_char_count >= 80:
+        html_parts.append(maybe_insert_section_image(current_section_title))
+
     return "".join(html_parts)
 
 
 def wrap_full_html(content: str, title: str = "文章") -> str:
-    """包裹为完整 HTML 文档"""
+    """包裹为完整 HTML 文档（用于本地预览）"""
     return f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -440,17 +623,30 @@ def wrap_wechat_html(content: str) -> str:
     )
 
 
+def count_images_in_html(html: str) -> int:
+    """统计 HTML 中的图片数量"""
+    return len(re.findall(r'<img\s', html))
+
+
 # ─── 主程序 ────────────────────────────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(
-        description="微信公众号排版转换工具 - 将 Markdown/纯文字转为公众号 HTML"
+        description="微信公众号排版转换工具（带图版）- 将 Markdown/纯文字转为公众号 HTML，支持自动配图"
     )
     parser.add_argument("--input", "-i", required=True, help="输入文件路径（.md 或 .txt）")
     parser.add_argument("--output", "-o", default="output.html", help="输出 HTML 文件路径（默认 output.html）")
     parser.add_argument("--title", "-t", default="", help="文章标题（可选）")
     parser.add_argument("--theme", default=DEFAULT_THEME, help=f"主题色（默认 {DEFAULT_THEME}）")
-    parser.add_argument("--wechat-only", action="store_true", help="仅输出微信粘贴用的 section 片段，不含 HTML 外壳")
+    parser.add_argument("--wechat-only", action="store_true",
+                        help="仅输出微信粘贴用的 section 片段，不含 HTML 外壳")
+    # ── 图片相关参数 ────────────────────────────────────
+    parser.add_argument("--with-images", action="store_true",
+                        help="在合适位置自动插入图片占位符（章节配图 + 封面图）")
+    parser.add_argument("--image-style", default=DEFAULT_IMAGE_STYLE,
+                        help=f"图片风格描述，用于 AI 生成提示词（默认：'{DEFAULT_IMAGE_STYLE}'）")
+    parser.add_argument("--no-cover", action="store_true",
+                        help="跳过封面图，不在 H1 后插入封面配图")
     args = parser.parse_args()
 
     # 读取输入
@@ -463,7 +659,13 @@ def main():
     title = args.title or input_path.stem
 
     # 转换
-    body_html = parse_markdown(md_content, theme=args.theme)
+    body_html = parse_markdown(
+        md_content,
+        theme=args.theme,
+        with_images=args.with_images,
+        image_style=args.image_style,
+        no_cover=args.no_cover,
+    )
 
     # 包裹
     if args.wechat_only:
@@ -474,7 +676,14 @@ def main():
     # 写出
     output_path = Path(args.output)
     output_path.write_text(final_html, encoding="utf-8")
+
+    img_count = count_images_in_html(final_html)
     print(f"[OK] 转换完成！输出文件：{output_path.resolve()}")
+    if img_count > 0:
+        print(f"[图片] 共包含 {img_count} 张图片/占位符")
+        if args.with_images:
+            print(f"[提示] 占位符图片需替换为实际图片后再上传公众号")
+            print(f"[提示] 搜索 HTML 中的 <!-- [AUTO_IMAGE] 注释，按 prompt 生成并替换对应图片")
 
 
 if __name__ == "__main__":

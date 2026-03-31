@@ -236,6 +236,116 @@
 
 ---
 
+## 十二、图片组件
+
+### 封面题图（H1 主标题之后，必须有）
+```html
+<figure style="margin: 28px 0; text-align: center;">
+  <img src="图片URL" alt="文章主题关键词"
+       style="max-width: 100%; border-radius: 12px; display: block; margin: 0 auto;
+              box-shadow: 0 6px 24px rgba(0,0,0,0.14);" />
+  <figcaption style="font-size: 13px; color: #999; margin-top: 8px; line-height: 1.6; font-style: italic;">▲ 封面图</figcaption>
+</figure>
+```
+
+### 全宽章节配图（H2 章节内容区块内）
+```html
+<figure style="margin: 28px 0; text-align: center;">
+  <img src="图片URL" alt="章节主题关键词"
+       style="max-width: 100%; border-radius: 8px; display: block; margin: 0 auto;
+              box-shadow: 0 4px 16px rgba(0,0,0,0.10);" />
+  <figcaption style="font-size: 13px; color: #999; margin-top: 8px; line-height: 1.6; font-style: italic;">图片说明文字</figcaption>
+</figure>
+```
+
+### 小图插图（正文中偏小的说明图，宽度 80%）
+```html
+<figure style="margin: 20px auto; text-align: center; max-width: 80%;">
+  <img src="图片URL" alt="说明关键词"
+       style="max-width: 100%; border-radius: 8px; display: block; margin: 0 auto;" />
+  <figcaption style="font-size: 13px; color: #999; margin-top: 8px; font-style: italic;">说明文字</figcaption>
+</figure>
+```
+
+### 图片占位符（开发/排版阶段使用）
+```html
+<!-- [AUTO_IMAGE] prompt="章节主题, minimalist flat illustration, no text" width=677 height=340 -->
+<figure style="margin: 28px 0; text-align: center;">
+  <img src="https://via.placeholder.com/677x340/e8f5ef/07c160?text=配图占位"
+       alt="章节关键词"
+       style="max-width: 100%; border-radius: 8px; display: block; margin: 0 auto;
+              box-shadow: 0 4px 16px rgba(0,0,0,0.10);" />
+  <figcaption style="font-size: 13px; color: #999; margin-top: 8px; font-style: italic;">▲ 章节配图</figcaption>
+</figure>
+```
+
+### 图片位置策略
+
+| 位置 | 图片类型 | 触发条件 | 推荐尺寸 |
+|------|---------|---------|---------|
+| H1 之后 | 封面题图 | 每篇必须 | 677×340（横版）|
+| H2 章节内（章节≥80字）| 章节配图 | 每章节可有 1 张 | 677×340 或 677×677 |
+| 步骤说明之后（可选）| 步骤插图 | 有实操截图时 | 677×auto |
+| 文章结尾 | 结尾装饰图 | 可选 | 677×200 |
+
+### AI 生成图片提示词规范
+
+生成公众号配图时，提示词遵循以下模板：
+- **基础结构**：`{内容主题}, {风格描述}, {颜色描述}, no text, no watermark, no logo`
+- **推荐风格**：`minimalist flat illustration`、`isometric vector art`、`clean digital art`
+- **推荐颜色**：soft green and white、light pastel、neutral tones
+- **示例**：`"knowledge management workflow, connected nodes diagram, minimalist flat illustration, soft green and white color palette, no text, no watermark"`
+
+---
+
+## 完整 HTML 文档模板（含图片）
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文章标题</title>
+</head>
+<body>
+<section style="font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', Arial, sans-serif; font-size: 16px; color: #3d3d3d; line-height: 1.8; padding: 0 16px; max-width: 677px; margin: 0 auto; word-break: break-word;">
+
+  <!-- H1 主标题 -->
+  <h1 style="font-size: 24px; font-weight: bold; color: #1a1a1a; text-align: center; margin: 32px 0 8px; line-height: 1.4;">文章标题</h1>
+  <div style="width: 48px; height: 4px; background: #07c160; border-radius: 2px; margin: 0 auto 32px;"></div>
+
+  <!-- 封面题图（H1 之后必须插入）-->
+  <figure style="margin: 28px 0; text-align: center;">
+    <img src="封面图片URL" alt="文章主题"
+         style="max-width: 100%; border-radius: 12px; display: block; margin: 0 auto;
+                box-shadow: 0 6px 24px rgba(0,0,0,0.14);" />
+    <figcaption style="font-size: 13px; color: #999; margin-top: 8px; line-height: 1.6; font-style: italic;">▲ 封面图</figcaption>
+  </figure>
+
+  <!-- 正文内容 -->
+
+  <!-- H2 章节标题 -->
+  <h2 style="font-size: 18px; font-weight: bold; color: #1a1a1a; margin: 40px 0 16px; padding: 10px 16px; background: #e8f5ef; border-left: 4px solid #07c160; border-radius: 0 6px 6px 0; line-height: 1.5;">章节标题</h2>
+
+  <!-- 章节内容段落 -->
+  <p style="font-size: 16px; color: #3d3d3d; line-height: 1.8; margin: 0 0 20px;">段落内容</p>
+
+  <!-- 章节配图 -->
+  <figure style="margin: 28px 0; text-align: center;">
+    <img src="章节图片URL" alt="章节主题"
+         style="max-width: 100%; border-radius: 8px; display: block; margin: 0 auto;
+                box-shadow: 0 4px 16px rgba(0,0,0,0.10);" />
+    <figcaption style="font-size: 13px; color: #999; margin-top: 8px; line-height: 1.6; font-style: italic;">图片说明</figcaption>
+  </figure>
+
+</section>
+</body>
+</html>
+```
+
+---
+
 ## 重要约束（微信编辑器兼容性）
 
 1. **所有样式必须内联**（inline style），不能使用 `<style>` 标签
@@ -245,3 +355,4 @@
 5. **不使用 `flexbox` 的 `gap` 属性**（部分旧版微信不支持），改用 `margin`
 6. **图片使用** `max-width: 100%; display: block; margin: 0 auto;`
 7. **链接色** 统一用 `#576b95`
+8. **图片上传**：公众号编辑器需要先上传图片获取微信 CDN 地址，不能直接使用外链图片
