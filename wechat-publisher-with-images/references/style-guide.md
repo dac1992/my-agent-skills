@@ -356,3 +356,182 @@
 6. **图片使用** `max-width: 100%; display: block; margin: 0 auto;`
 7. **链接色** 统一用 `#576b95`
 8. **图片上传**：公众号编辑器需要先上传图片获取微信 CDN 地址，不能直接使用外链图片
+
+---
+
+## 十三、进阶排版组件（卡片 + 展示风格）
+
+> 以下组件适合用于：技能说明页、演示页、对比页、教程索引页等非纯文章内容场景。风格更现代、层次更清晰。
+
+### 页面 Header（渐变标题栏）
+
+适用于文档顶部或分节大标题区域：
+
+```html
+<div style="background: linear-gradient(135deg, #07c160, #0a9c4a); color: #fff; border-radius: 16px; padding: 40px; margin-bottom: 24px;">
+  <h1 style="margin: 0 0 8px; font-size: 28px; font-weight: 800;">🎨 技能标题</h1>
+  <p style="margin: 0; opacity: 0.9; font-size: 16px;">技能副标题描述文字</p>
+  <span style="display: inline-block; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 13px; margin-top: 12px;">🏷️ 标签</span>
+</div>
+```
+
+### 卡片式内容区块
+
+适用于功能分组、特性说明：
+
+```html
+<div style="background: #fff; border-radius: 12px; padding: 32px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+  <h2 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0 0 20px; padding-left: 14px; border-left: 4px solid #07c160;">📊 章节标题</h2>
+  <!-- 区块内容 -->
+</div>
+```
+
+### Feature 卡片组（2列网格）
+
+适用于展示多个功能点，每个卡片有浅绿背景和绿色强调：
+
+```html
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+  <div style="background: #f7faf8; border: 1px solid #b7dfc8; border-radius: 10px; padding: 18px;">
+    <h3 style="margin: 0 0 8px; font-size: 15px; color: #07c160; display: flex; align-items: center; gap: 6px;">🖼️ 功能名称</h3>
+    <p style="margin: 0; font-size: 14px; color: #555; line-height: 1.7;">功能描述文字</p>
+  </div>
+</div>
+```
+
+### 对比表格（Diff Table）
+
+适用于改造前后对比、能力对比等场景：
+
+```html
+<table style="width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px;">
+  <thead>
+    <tr>
+      <th style="background: #f7f7f7; padding: 10px 16px; text-align: left; font-weight: 600; color: #555; border-bottom: 2px solid #e8e8e8;">能力</th>
+      <th style="background: #f7f7f7; padding: 10px 16px; text-align: left; font-weight: 600; color: #555; border-bottom: 2px solid #e8e8e8;">原版</th>
+      <th style="background: #f7f7f7; padding: 10px 16px; text-align: left; font-weight: 600; color: #555; border-bottom: 2px solid #e8e8e8;">新版</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="padding: 12px 16px; border-bottom: 1px solid #f0f0f0; color: #3d3d3d;">功能项</td>
+      <td style="padding: 12px 16px; border-bottom: 1px solid #f0f0f0; color: #cf1322;">❌ 不支持</td>
+      <td style="padding: 12px 16px; border-bottom: 1px solid #f0f0f0; color: #389e0d;">✅ 支持</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- 版本标签 -->
+<span style="display: inline-block; background: #fff2f0; color: #cf1322; border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 600;">旧版</span>
+<span style="display: inline-block; background: #f6ffed; color: #389e0d; border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 600;">新版</span>
+```
+
+### 文件目录树（File Tree）
+
+适用于展示项目结构，目录蓝色、文件深灰、新增绿色、修改橙色：
+
+```html
+<div style="background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 8px; padding: 20px; font-family: 'Menlo', 'Consolas', monospace; font-size: 13px; line-height: 2;">
+  <span style="color: #0366d6; font-weight: 600;">project/</span><br>
+  &nbsp;&nbsp;├── <span style="color: #24292e;">README.md</span><br>
+  &nbsp;&nbsp;├── <span style="color: #22863a; font-weight: 600;">SKILL.md</span> <span style="color:#6a737d;"># 新增文件</span><br>
+  &nbsp;&nbsp;└── <span style="color: #e36209;">scripts/</span> <span style="color:#6a737d;"># 修改目录</span>
+</div>
+```
+
+### 步骤流程（Steps）
+
+适用于操作步骤指引：
+
+```html
+<div style="counter-reset: step; margin: 24px 0;">
+  <div style="display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start;">
+    <div style="flex-shrink: 0; width: 32px; height: 32px; background: #07c160; color: #fff; font-size: 14px; font-weight: 700; border-radius: 50%; display: flex; align-items: center; justify-content: center;">1</div>
+    <div style="flex: 1;">
+      <p style="font-size: 15px; font-weight: 700; color: #1a1a1a; margin: 0 0 6px;">步骤标题</p>
+      <p style="font-size: 14px; color: #555; line-height: 1.7; margin: 0;">步骤说明内容</p>
+    </div>
+  </div>
+</div>
+```
+
+### 代码块（带语法高亮）
+
+适用于展示代码示例，支持关键字/字符串/注释/标签着色：
+
+```html
+<div style="background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 8px; padding: 16px; font-family: 'Menlo', 'Consolas', monospace; font-size: 13px; line-height: 1.7; overflow-x: auto; margin: 16px 0;">
+<span style="color: #6a737d;"># 注释文字</span>
+<span style="color: #d73a49;">if</span> <span style="color: #24292e;">condition:</span>
+  <span style="color: #22863a;">&lt;tag</span> <span style="color: #032f62;">"value"</span><span style="color: #22863a;">&gt;</span>
+</div>
+```
+
+> **内联代码**（短代码片段）：
+> ```html
+> <code style="font-family: 'Menlo', monospace; font-size: 13px; background: #f6f8fa; color: #e96900; padding: 2px 6px; border-radius: 4px; border: 1px solid #e1e4e8;">代码</code>
+> ```
+
+### Feature 标签（Chip / Badge）
+
+适用于展示功能关键词：
+
+```html
+<span style="display: inline-flex; align-items: center; gap: 4px; background: #e8f5ef; color: #07c160; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 12px; margin: 4px 4px 4px 0;">✨ 功能名</span>
+```
+
+### 警告提示框（Warning）
+
+黄色背景，适用于上传说明、注意事项：
+
+```html
+<div style="background: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px; padding: 16px; margin: 16px 0;">
+  <p style="margin: 0; font-size: 14px; color: #7c5e00; line-height: 1.8;">
+    <strong>⚠️ 注意：</strong>提示内容文字
+  </p>
+</div>
+```
+
+### 完整展示页模板（技能说明页）
+
+整合以上所有组件，适合作为技能说明文章：
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>技能名称</title>
+</head>
+<body style="margin: 0; padding: 20px; background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;">
+<div style="max-width: 960px; margin: 0 auto;">
+
+  <!-- 页面 Header -->
+  <div style="background: linear-gradient(135deg, #07c160, #0a9c4a); color: #fff; border-radius: 16px; padding: 40px; margin-bottom: 24px;">
+    <h1 style="margin: 0 0 8px; font-size: 28px; font-weight: 800;">技能标题</h1>
+    <p style="margin: 0; opacity: 0.9; font-size: 16px;">技能副标题</p>
+    <span style="display: inline-block; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 13px; margin-top: 12px;">✅ 完成</span>
+  </div>
+
+  <!-- 卡片区块 -->
+  <div style="background: #fff; border-radius: 12px; padding: 32px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+    <h2 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0 0 20px; padding-left: 14px; border-left: 4px solid #07c160;">核心功能</h2>
+
+    <!-- Feature 卡片组 -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div style="background: #f7faf8; border: 1px solid #b7dfc8; border-radius: 10px; padding: 18px;">
+        <h3 style="margin: 0 0 8px; font-size: 15px; color: #07c160;">✨ 功能一</h3>
+        <p style="margin: 0; font-size: 14px; color: #555; line-height: 1.7;">描述</p>
+      </div>
+      <div style="background: #f7faf8; border: 1px solid #b7dfc8; border-radius: 10px; padding: 18px;">
+        <h3 style="margin: 0 0 8px; font-size: 15px; color: #07c160;">🚀 功能二</h3>
+        <p style="margin: 0; font-size: 14px; color: #555; line-height: 1.7;">描述</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
+```

@@ -80,6 +80,8 @@ description_en: "Convert article content to WeChat Official Account HTML layout 
 
 排版细节完整定义见 `references/style-guide.md`，核心要点如下：
 
+> 💡 **高阶展示组件**：第十三节新增了适合技能说明页、演示页的组件（卡片布局、Diff Table、File Tree、Feature Card、代码语法高亮等），可参考 `demo-改造说明.html` 的实际效果。
+
 ### 配色方案
 - 主色：`#1a1a1a`（正文）
 - 强调色：`#07c160`（微信绿，用于左边框装饰、按钮）
